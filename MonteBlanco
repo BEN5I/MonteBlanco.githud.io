@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Monte Blanco, un domingo para nosotros</title>
+<style>
+:root{--bg:#f3f7ef;--card:#fff;--ink:#1f3326;--muted:#5b6f60;--accent:#2f7d4f;--accent-ink:#fff;--line:#d5e0d3;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121c16;--card:#1a271f;--ink:#e8f1e9;--muted:#9bb0a0;--accent:#5fc088;--accent-ink:#0e1a12;--line:#2c3f33}}
+:root[data-theme="dark"]{--bg:#121c16;--card:#1a271f;--ink:#e8f1e9;--muted:#9bb0a0;--accent:#5fc088;--accent-ink:#0e1a12;--line:#2c3f33}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,"Times New Roman",serif;line-height:1.5}
+main{max-width:520px;margin:0 auto;padding:28px 18px 40px}
+.eyebrow{font:600 12px/1 system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1{font-size:2rem;line-height:1.15;margin:10px 0 8px}
+.lead{color:var(--muted);margin:0 0 22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:16px}
+h2{font:600 15px/1.2 system-ui,sans-serif;margin:0 0 12px}
+.opts{display:grid;gap:8px}
+.opt{display:block;width:100%;text-align:left;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:transparent;color:var(--ink);font:500 16px system-ui,sans-serif;cursor:pointer}
+.opt[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+textarea{width:100%;min-height:90px;padding:12px;border:1.5px solid var(--line);border-radius:12px;background:transparent;color:var(--ink);font:16px system-ui,sans-serif;resize:vertical}
+.btn{display:block;width:100%;padding:14px;border:0;border-radius:12px;background:var(--accent);color:var(--accent-ink);font:600 16px system-ui,sans-serif;cursor:pointer}
+.btn.alt{background:transparent;color:var(--accent);border:1.5px solid var(--accent);margin-top:8px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.note{font:13px system-ui,sans-serif;color:var(--muted);text-align:center;margin-top:12px}
+#ok{display:none;text-align:center;font:600 15px system-ui,sans-serif;color:var(--accent);margin-top:10px}
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">Una idea para nosotros dos</div>
+  <h1>¿Qué domingo nos vamos a Monte Blanco? 🌿</h1>
+  <p class="lead">Lancha desde Tigre, caminata por la reserva y un día tranquilo. Vos elegís cuándo.</p>
+
+  <div class="card">
+    <h2>1. Elegí un domingo</h2>
+    <div class="opts" id="days"></div>
+  </div>
+
+  <div class="card">
+    <h2>2. ¿A qué hora salimos?</h2>
+    <div class="row" id="times">
+      <button class="opt" data-v="Salida 09:00" aria-pressed="true">☀️ 09:00<br><small>Todo el día</small></button>
+      <button class="opt" data-v="Salida 11:00" aria-pressed="false">🌤️ 11:00<br><small>Más tranqui</small></button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>3. Dejame un mensajito (opcional)</h2>
+    <textarea id="msg" placeholder="Escribí lo que quieras…"></textarea>
+  </div>
+
+  <button class="btn" id="send" disabled>Enviarle mi respuesta 💌</button>
+  <button class="btn alt" id="copy" disabled>Copiar respuesta</button>
+  <div id="ok"></div>
+  <p class="note">Si ese día llueve, lo movemos al siguiente domingo lindo.</p>
+</main>
+
+<script>
+// Poné tu número con código de país, sin + ni espacios (ej: "5491112345678"). Si queda vacío, ella elige a quién mandarlo.
+var WA_NUMBER = "";
+
+var dEl=document.getElementById("days"), send=document.getElementById("send"), copyB=document.getElementById("copy"), ok=document.getElementById("ok");
+var day=null, time="Salida 09:00";
+
+var fmt=new Intl.DateTimeFormat("es-AR",{weekday:"long",day:"numeric",month:"long"});
+var d=new Date(); d.setHours(12,0,0,0);
+d.setDate(d.getDate()+((7-d.getDay())%7||7));
+for(var i=0;i<6;i++){
+  var label=fmt.format(d); label=label.charAt(0).toUpperCase()+label.slice(1);
+  mk(label); d.setDate(d.getDate()+7);
+}
+mk("Otro domingo, lo charlamos");
+function mk(label){
+  var b=document.createElement("button"); b.className="opt"; b.textContent=label; b.setAttribute("aria-pressed","false");
+  b.onclick=function(){[].forEach.call(dEl.children,function(x){x.setAttribute("aria-pressed","false")});b.setAttribute("aria-pressed","true");day=label;send.disabled=copyB.disabled=false};
+  dEl.appendChild(b);
+}
+[].forEach.call(document.querySelectorAll("#times .opt"),function(b){
+  b.onclick=function(){[].forEach.call(document.querySelectorAll("#times .opt"),function(x){x.setAttribute("aria-pressed","false")});b.setAttribute("aria-pressed","true");time=b.dataset.v};
+});
+
+function text(){
+  var m=document.getElementById("msg").value.trim();
+  var t="¡Dale, vamos a Monte Blanco! 🌿\nMi elección: "+day+(day.indexOf("Otro")===0?"":" ("+time.toLowerCase()+")");
+  return m?t+"\n\n"+m:t;
+}
+send.onclick=function(){
+  var t=text();
+  if(WA_NUMBER){location.href="https://wa.me/"+WA_NUMBER+"?text="+encodeURIComponent(t);return}
+  if(navigator.share){navigator.share({text:t}).catch(function(){});return}
+  window.open("https://wa.me/?text="+encodeURIComponent(t),"_blank");
+};
+copyB.onclick=function(){
+  var t=text();
+  function done(){ok.style.display="block";ok.textContent="¡Copiado! Pegalo en un mensaje 💚"}
+  try{navigator.clipboard.writeText(t).then(done,function(){prompt("Copiá tu respuesta:",t)})}catch(e){prompt("Copiá tu respuesta:",t)}
+};
+</script>
+</body>
+</html>
